@@ -31,11 +31,11 @@ const resturantSchema = new mongoose.Schema({
   foodtype: {
     type: String,
     required: true,
-    unique: true
+    unique: false
   },
   password: {
     type: String,
-    required: false,
+    required: true,
     unique: false
   }
 });
