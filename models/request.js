@@ -6,10 +6,13 @@ const requestSchema = new mongoose.Schema({
     required: true,
  
   },
-  restuid: {
+  // restuid: {
+  //   type: String,
+  //   required: true
+  // },
+  foodid: {
     type: String,
-    required: true,
-  
+    required: true
   },
   restuemail: {
     type: String,
@@ -45,6 +48,11 @@ const requestSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: false
+  },
+  status: {
+    type: String,
+    required:true,
+    default: "requested"
   },
   comment: {
     type: String,

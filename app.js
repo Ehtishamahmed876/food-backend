@@ -3,8 +3,8 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 const app = express();
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb'}));
 const port = 8081; // or any other port you prefer
 
 // Enable CORS middleware
@@ -15,9 +15,10 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   next();
 });
-// Increase the payload size limit (e.g., 10MB)
-app.use(bodyParser.json({ limit: '500mb' }));
-app.use(bodyParser.urlencoded({ limit: '500mb', extended: true }));
+// // Increase the payload size limit (e.g., 10MB)
+// app.use(bodyParser.json({limit: '50mb', extended: true}));
+// app.use(bodyParser.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
+// app.use(bodyParser.text({ limit: '200mb' }));
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
@@ -136,12 +137,13 @@ const Hello = require('./models/request');
   app.post('/request', async (req, res) => {
     try {
       //  console.log(req.body)
-      const {name,restuid,restuemail,foodname,cnic,address,email,contact,usertype,comment } = req.body;
+      const {name,foodid,restuemail,foodname,cnic,address,email,contact,usertype,comment } = req.body;
   
       // Create a new user instance
       const newData =  Hello({
         name:name,
-        restuid:restuid,
+        // restuid:restuid,
+        foodid:foodid,
         restuemail:restuemail,
         foodname:foodname,
         cnicreq:cnic,
@@ -151,7 +153,7 @@ const Hello = require('./models/request');
         usertypereq:usertype,
         comment:comment
       });
-      console.log("hell",newData)
+      // console.log("hell",newData)
       // Save the user to the database 
       const data = await newData.save();
       console.log("data",data)
@@ -164,12 +166,16 @@ const Hello = require('./models/request');
 
   app.post('/getrequest', async (req, res) => {
     try {
-      console.log(req.body)
-      const {restuid} = req.body;
+      // console.log(req.body)
+
+      const {restuemail} = req.body;
+      const condition = { status: "requested"}
+      const condition2 = { status: "pending"}
+      const statuses = ['requested', 'pending'];
         
       // Find the user in the database
-      const user = await Hello.find({ restuid });
-      console.log(user)
+      const user = await Hello.find({restuemail} && { status: { $in: statuses } });
+      console.log(user.name)
       if (user.length === 0) {
         return res.status(404).json({ message: 'No user data found for the email provided' });
       }
@@ -182,3 +188,96 @@ const Hello = require('./models/request');
     }
   });
 
+  app.put('/donate/:id', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const {  email } = req.body;
+  
+      // Find the user document by ID
+      const user = await Hello.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Update the user document
+      user.status = "pending";
+      await user.save();
+      res.status(200).json({ message: 'Email is sending to the User/NGO' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error updating user' });
+    }
+  });
+
+  app.put('/received/:id', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const {  foodid } = req.body;
+      console.log("id", userId)
+      console.log("foodid", foodid)
+
+      // Find the user document by ID
+      const user = await Hello.findById(userId);
+      const user2 = await Image.findOne({_id : foodid});
+
+      console.log("hell",user,user2)
+      if (!user) {
+        return res.status(404).json({ error: 'Record not found' });
+      }
+      if (!user2) {
+        return res.status(404).json({ error: 'Record not found' });
+      }
+      // Update the user document
+      user.status = "done";
+      user2.status = 1;
+      await user.save();
+      await user2.save();
+      res.status(200).json({ message: 'Sucessfully donated' });
+    } catch (error) {
+      console.error('MongoDB Error:', error.message);
+
+      res.status(500).json({ error: 'Error updating user' });
+    }
+  });
+
+  app.put('/notreceived/:id', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const {  email } = req.body;
+  
+      // Find the user document by ID
+      const user = await Hello.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Update the user document
+      user.status = "requested";
+      await user.save();
+      res.status(200).json({ message: 'Updated Sucesfully' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error updating user' });
+    }
+  });
+
+  app.put('/rejected/:id', async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const {  email } = req.body;
+  
+      // Find the user document by ID
+    
+      const user = await Hello.findById(userId);
+  
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Update the user document
+      user.status = "done";
+      await user.save();
+      res.status(200).json({ message: 'Requested rejected' });
+    } catch (error) {
+      res.status(500).json({ error: 'Error updating user' });
+    }
+  });
+  
+  
