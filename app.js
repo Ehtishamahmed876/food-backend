@@ -77,10 +77,11 @@ const Hello = require('./models/request');
 
   app.post('/upload', async (req, res) => {
     try {
-      const { name, data, email } = req.body;
+      const { name, data, email ,restuname} = req.body;
   
       // Create a new image document 
       const image = new Image({
+        restuname:restuname,
         email: email,
         name: name,
         data: data
@@ -174,7 +175,7 @@ const Hello = require('./models/request');
       const statuses = ['requested', 'pending'];
         
       // Find the user in the database
-      const user = await Hello.find({restuemail} && { status: { $in: statuses } });
+      const user = await Hello.find({restuemail , status: { $in: statuses } });
       console.log(user.name)
       if (user.length === 0) {
         return res.status(404).json({ message: 'No user data found for the email provided' });

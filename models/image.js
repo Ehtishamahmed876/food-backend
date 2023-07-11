@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const imageSchema = new mongoose.Schema({
+  restuname: {
+    type: String,
+    required: true,
+  },
   email: {
     type: String,
     required: true,
